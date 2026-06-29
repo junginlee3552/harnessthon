@@ -39,6 +39,12 @@ export default function Page() {
     setMessages([]);
   }
 
+  async function deleteConversation(id: string) {
+    await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+    if (conversationId === id) newChat();
+    refreshConversations();
+  }
+
   async function send() {
     const content = input.trim();
     if (!content) return;
@@ -86,6 +92,9 @@ export default function Page() {
           {conversations.map((c) => (
             <li key={c.id}>
               <button onClick={() => loadConversation(c.id)}>{c.title}</button>
+              <button aria-label={`삭제 ${c.title}`} onClick={() => deleteConversation(c.id)}>
+                ×
+              </button>
             </li>
           ))}
         </ul>

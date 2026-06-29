@@ -25,3 +25,18 @@ export async function GET(req: Request, ctx: { params: { id: string } }) {
     conversation.messages.map((m) => ({ role: m.role, content: m.content }))
   );
 }
+
+export async function DELETE(req: Request, ctx: { params: { id: string } }) {
+  const { clientId } = resolveClientId(
+    readCookie(req.headers.get("cookie"), "clientId")
+  );
+  const conversation = await db.conversation.findUnique({
+    where: { id: ctx.params.id },
+  });
+  if (!conversation || conversation.clientId !== clientId) {
+    return new Response("not found", { status: 404 });
+  }
+  await db.message.deleteMany({ where: { conversationId: ctx.params.id } });
+  await db.conversation.delete({ where: { id: ctx.params.id } });
+  return new Response("ok", { status: 200 });
+}
