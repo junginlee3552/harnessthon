@@ -1,13 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Msg = { role: "user" | "assistant"; content: string };
+type ConversationSummary = { id: string; title: string; createdAt: string };
 
 export default function Page() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [conversationId, setConversationId] = useState<string | undefined>();
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+
+  useEffect(() => {
+    fetch("/api/conversations")
+      .then((r) => r.json())
+      .then(setConversations)
+      .catch(() => {});
+  }, []);
+
+  async function loadConversation(id: string) {
+    const res = await fetch(`/api/conversations/${id}`);
+    const msgs: Msg[] = await res.json();
+    setConversationId(id);
+    setMessages(msgs);
+  }
 
   async function send() {
     const content = input.trim();
@@ -41,18 +57,29 @@ export default function Page() {
   }
 
   return (
-    <main style={{ maxWidth: 640, margin: "0 auto", padding: 24 }}>
-      {messages.length === 0 && <p>무엇이든 물어보세요</p>}
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      <aside style={{ width: 240, borderRight: "1px solid #ddd", padding: 12 }}>
+        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+          {conversations.map((c) => (
+            <li key={c.id}>
+              <button onClick={() => loadConversation(c.id)}>{c.title}</button>
+            </li>
+          ))}
+        </ul>
+      </aside>
+      <main style={{ maxWidth: 640, margin: "0 auto", padding: 24, flex: 1 }}>
+        {messages.length === 0 && <p>무엇이든 물어보세요</p>}
       {messages.map((m, i) => (
         <p key={i}>
           <b>{m.role}:</b> {m.content}
         </p>
       ))}
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && send()}
-      />
-    </main>
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send()}
+        />
+      </main>
+    </div>
   );
 }
