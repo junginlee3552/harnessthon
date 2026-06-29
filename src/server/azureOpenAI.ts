@@ -1,8 +1,10 @@
 export async function* streamReply(
   messages: { role: string; content: string }[],
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
+  model?: string
 ) {
-  const url = `${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-02-01`;
+  const deployment = model ?? process.env.AZURE_OPENAI_DEPLOYMENT;
+  const url = `${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/chat/completions?api-version=2024-02-01`;
   const res = await fetchImpl(url, {
     method: "POST",
     headers: {

@@ -13,6 +13,7 @@ export default function Page() {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [streamError, setStreamError] = useState(false);
   const [sending, setSending] = useState(false);
+  const [model, setModel] = useState("gpt-4o-mini");
   const [editingId, setEditingId] = useState<string | undefined>();
   const [editTitle, setEditTitle] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -79,7 +80,7 @@ export default function Page() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ conversationId, content }),
+      body: JSON.stringify({ conversationId, content, model }),
       signal: ctrl.signal,
     });
     const reader = res.body!.getReader();
@@ -163,6 +164,10 @@ export default function Page() {
         {streamError && <p>응답이 중단되었습니다</p>}
         {streamError && !sending && <button onClick={retry}>재시도</button>}
         <div ref={bottomRef} />
+        <select aria-label="모델" value={model} onChange={(e) => setModel(e.target.value)}>
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option value="gpt-4o">gpt-4o</option>
+        </select>
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}

@@ -12,9 +12,10 @@ function readCookie(header: string | null, name: string): string | undefined {
 }
 
 export async function POST(req: Request) {
-  const { conversationId, content } = (await req.json()) as {
+  const { conversationId, content, model } = (await req.json()) as {
     conversationId?: string;
     content: string;
+    model?: string;
   };
   const { clientId, isNew } = resolveClientId(
     readCookie(req.headers.get("cookie"), "clientId")
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const tok of streamReply(messages)) {
+        for await (const tok of streamReply(messages, fetch, model)) {
           reply += tok;
           controller.enqueue(enc.encode(`data: ${tok}\n\n`));
         }

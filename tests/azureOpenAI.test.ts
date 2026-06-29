@@ -26,3 +26,17 @@ it("yields token chunks from a mocked fetch", async () => {
   }
   expect(out.join("")).toBe("Hello");
 });
+
+it("targets the selected model deployment in the URL", async () => {
+  process.env.AZURE_OPENAI_ENDPOINT = "https://x.openai.azure.com";
+  process.env.AZURE_OPENAI_DEPLOYMENT = "default";
+  let calledUrl = "";
+  const fakeFetch = async (url: string) => {
+    calledUrl = url;
+    return { ok: true, body: { getReader: () => mockReader(["x"]) } };
+  };
+  for await (const _ of streamReply([{ role: "user", content: "hi" }], fakeFetch as any, "gpt-4o")) {
+    /* drain */
+  }
+  expect(calledUrl).toContain("/deployments/gpt-4o/");
+});
