@@ -16,6 +16,7 @@ export default function Page() {
   const [editingId, setEditingId] = useState<string | undefined>();
   const [editTitle, setEditTitle] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | undefined>(undefined);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.();
@@ -71,35 +72,49 @@ export default function Page() {
     setSending(true);
     setMessages((m) => [...m, { role: "user", content }, { role: "assistant", content: "" }]);
 
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ conversationId, content }),
+      signal: ctrl.signal,
     });
     const reader = res.body!.getReader();
     const dec = new TextDecoder();
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      for (const line of dec.decode(value).split("\n\n")) {
-        if (line.startsWith("event: error")) {
-          setStreamError(true);
-          continue;
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        for (const line of dec.decode(value).split("\n\n")) {
+          if (line.startsWith("event: error")) {
+            setStreamError(true);
+            continue;
+          }
+          const tok = line.replace(/^data: /, "");
+          if (!tok) continue;
+          setMessages((m) => {
+            const copy = [...m];
+            copy[copy.length - 1] = {
+              role: "assistant",
+              content: copy[copy.length - 1].content + tok,
+            };
+            return copy;
+          });
         }
-        const tok = line.replace(/^data: /, "");
-        if (!tok) continue;
-        setMessages((m) => {
-          const copy = [...m];
-          copy[copy.length - 1] = {
-            role: "assistant",
-            content: copy[copy.length - 1].content + tok,
-          };
-          return copy;
-        });
       }
+    } catch {
+      /* aborted */
     }
+    abortRef.current = undefined;
     setSending(false);
     refreshConversations();
+  }
+
+  function stop() {
+    abortRef.current?.abort();
+    abortRef.current = undefined;
+    setSending(false);
   }
 
   return (
@@ -142,6 +157,7 @@ export default function Page() {
           onKeyDown={(e) => e.key === "Enter" && send()}
         />
         <button onClick={send} disabled={sending || !input.trim()}>전송</button>
+        {sending && <button onClick={stop}>중지</button>}
       </main>
     </div>
   );
