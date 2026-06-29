@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type ConversationSummary = { id: string; title: string; createdAt: string };
@@ -14,6 +14,11 @@ export default function Page() {
   const [sending, setSending] = useState(false);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [editTitle, setEditTitle] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView?.();
+  }, [messages]);
 
   useEffect(() => {
     fetch("/api/conversations")
@@ -129,6 +134,7 @@ export default function Page() {
       ))}
         {sending && <p>응답 받는 중...</p>}
         {streamError && <p>응답이 중단되었습니다</p>}
+        <div ref={bottomRef} />
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
