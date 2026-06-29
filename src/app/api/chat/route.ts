@@ -34,14 +34,21 @@ export async function POST(req: Request) {
   let reply = "";
   const stream = new ReadableStream({
     async start(controller) {
-      for await (const tok of streamReply([{ role: "user", content }])) {
-        reply += tok;
-        controller.enqueue(enc.encode(`data: ${tok}\n\n`));
+      try {
+        for await (const tok of streamReply([{ role: "user", content }])) {
+          reply += tok;
+          controller.enqueue(enc.encode(`data: ${tok}\n\n`));
+        }
+      } finally {
+        await db.message.create({
+          data: {
+            conversationId: conversation!.id,
+            role: "assistant",
+            content: reply,
+          },
+        });
+        controller.close();
       }
-      await db.message.create({
-        data: { conversationId: conversation!.id, role: "assistant", content: reply },
-      });
-      controller.close();
     },
   });
 
