@@ -140,7 +140,7 @@ export default function Page() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
         />
-        <button onClick={send}>전송</button>
+        <button onClick={send} disabled={sending || !input.trim()}>전송</button>
       </main>
     </div>
   );
