@@ -24,7 +24,7 @@ describe("stop generation", () => {
 
   it("shows 중지 while sending and returns to 전송 after stop", async () => {
     render(<Page />);
-    const inp = document.querySelector("input")!;
+    const inp = document.querySelector("textarea")!;
     fireEvent.change(inp, { target: { value: "hi" } });
     fireEvent.click(screen.getByText("전송"));
     const stop = await screen.findByText("중지");

@@ -17,6 +17,7 @@ export default function Page() {
   const [editTitle, setEditTitle] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | undefined>(undefined);
+  const lastSentRef = useRef<string>("");
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.();
@@ -64,10 +65,11 @@ export default function Page() {
     refreshConversations();
   }
 
-  async function send() {
-    const content = input.trim();
+  async function send(text?: string) {
+    const content = (text ?? input).trim();
     if (!content) return;
-    setInput("");
+    lastSentRef.current = content;
+    if (text === undefined) setInput("");
     setStreamError(false);
     setSending(true);
     setMessages((m) => [...m, { role: "user", content }, { role: "assistant", content: "" }]);
@@ -117,6 +119,10 @@ export default function Page() {
     setSending(false);
   }
 
+  function retry() {
+    if (lastSentRef.current) send(lastSentRef.current);
+  }
+
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <aside style={{ width: 240, borderRight: "1px solid #ddd", padding: 12 }}>
@@ -150,13 +156,19 @@ export default function Page() {
       ))}
         {sending && <p>응답 받는 중...</p>}
         {streamError && <p>응답이 중단되었습니다</p>}
+        {streamError && !sending && <button onClick={retry}>재시도</button>}
         <div ref={bottomRef} />
-        <input
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
         />
-        <button onClick={send} disabled={sending || !input.trim()}>전송</button>
+        <button onClick={() => send()} disabled={sending || !input.trim()}>전송</button>
         {sending && <button onClick={stop}>중지</button>}
       </main>
     </div>
