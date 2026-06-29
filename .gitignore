@@ -1,0 +1,43 @@
+.DS_Store
+Thumbs.db
+
+# Editor and IDE state
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# In-repo git worktrees created for parallel development
+.worktrees/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# JavaScript / TypeScript
+node_modules/
+dist/
+build/
+coverage/
+.next/
+*.tsbuildinfo
+apps/**/.next/
+apps/**/*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+apps/**/.pytest_cache/
+*.egg-info/
+apps/**/*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
