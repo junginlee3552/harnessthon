@@ -30,12 +30,18 @@ export async function POST(req: Request) {
     data: { conversationId: conversation!.id, role: "user", content },
   });
 
+  const history = await db.message.findMany({
+    where: { conversationId: conversation!.id },
+    orderBy: { createdAt: "asc" },
+    select: { role: true, content: true },
+  });
+
   const enc = new TextEncoder();
   let reply = "";
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const tok of streamReply([{ role: "user", content }])) {
+        for await (const tok of streamReply(history)) {
           reply += tok;
           controller.enqueue(enc.encode(`data: ${tok}\n\n`));
         }
