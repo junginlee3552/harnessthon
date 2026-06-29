@@ -1,3 +1,13 @@
+# harnessthon
+
+**ChatGPT-like 챗 앱** 프로젝트. 아래 harness-guide 스킬 기반 프로세스로 진행한다.
+
+- 아이디어: ChatGPT 스타일 AI 챗 앱
+- 다음 단계: `/grill-with-docs` 로 설계를 추궁·수렴(2–3회) → `docs/adr`, `CONTEXT.md` 작성
+- 도메인 용어: `CONTEXT.md` · 결정 기록: `docs/adr/` · 설계: `docs/superpowers/specs/` · 계획: `docs/superpowers/plans/`
+
+---
+
 # Harness Guide — 아이디어에서 프로덕션까지의 스킬 기반 개발 프로세스
 
 이 저장소는 **신규 앱 아이디어를 프로덕션 앱으로 만드는 end-to-end 개발 프로세스**를,

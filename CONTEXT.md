@@ -1,6 +1,7 @@
-# Harness Guide
+# harnessthon
 
-This context defines the language for the skill-driven development guide in this repository.
+This context defines the language for **harnessthon**, a ChatGPT-style AI chat app built
+with the harness-guide skill-driven development process.
 
 ## Language
 
