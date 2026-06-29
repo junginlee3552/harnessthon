@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { streamReply } from "../src/server/azureOpenAI";
 
+process.env.AZURE_OPENAI_API_KEY = "test-key";
+
 function mockReader(parts: string[]) {
   const enc = new TextEncoder();
   const chunks = parts.map(

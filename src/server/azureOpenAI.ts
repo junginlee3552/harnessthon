@@ -4,13 +4,20 @@ export async function* streamReply(
   model?: string
 ) {
   const deployment = model ?? process.env.AZURE_OPENAI_DEPLOYMENT;
-  const url = `${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/chat/completions?api-version=2024-02-01`;
+  const url = `${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${deployment}/chat/completions?api-version=2025-04-01-preview`;
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (process.env.AZURE_OPENAI_API_KEY) {
+    headers["api-key"] = process.env.AZURE_OPENAI_API_KEY;
+  } else {
+    const { DefaultAzureCredential } = await import("@azure/identity");
+    const token = await new DefaultAzureCredential().getToken(
+      "https://cognitiveservices.azure.com/.default"
+    );
+    headers["authorization"] = `Bearer ${token.token}`;
+  }
   const res = await fetchImpl(url, {
     method: "POST",
-    headers: {
-      "api-key": process.env.AZURE_OPENAI_API_KEY ?? "",
-      "content-type": "application/json",
-    },
+    headers,
     body: JSON.stringify({ messages, stream: true }),
   });
   const reader = res.body!.getReader();

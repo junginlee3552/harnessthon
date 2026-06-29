@@ -41,3 +41,6 @@ apps/**/*.egg-info/
 .ruff_cache/
 .venv/
 venv/
+
+# Local SQLite DB
+prisma/dev.db
