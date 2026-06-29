@@ -19,6 +19,7 @@ it("creates conversation and persists both messages", async () => {
   await res.text();
   const db = new PrismaClient();
   const c = await db.conversation.findFirst({
+    where: { title: "hello world" },
     orderBy: { createdAt: "desc" },
     include: { messages: true },
   });
