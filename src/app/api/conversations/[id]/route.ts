@@ -40,3 +40,18 @@ export async function DELETE(req: Request, ctx: { params: { id: string } }) {
   await db.conversation.delete({ where: { id: ctx.params.id } });
   return new Response("ok", { status: 200 });
 }
+
+export async function PATCH(req: Request, ctx: { params: { id: string } }) {
+  const { clientId } = resolveClientId(
+    readCookie(req.headers.get("cookie"), "clientId")
+  );
+  const conversation = await db.conversation.findUnique({
+    where: { id: ctx.params.id },
+  });
+  if (!conversation || conversation.clientId !== clientId) {
+    return new Response("not found", { status: 404 });
+  }
+  const { title } = (await req.json()) as { title: string };
+  await db.conversation.update({ where: { id: ctx.params.id }, data: { title } });
+  return new Response("ok", { status: 200 });
+}

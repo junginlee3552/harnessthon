@@ -12,6 +12,8 @@ export default function Page() {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [streamError, setStreamError] = useState(false);
   const [sending, setSending] = useState(false);
+  const [editingId, setEditingId] = useState<string | undefined>();
+  const [editTitle, setEditTitle] = useState("");
 
   useEffect(() => {
     fetch("/api/conversations")
@@ -42,6 +44,16 @@ export default function Page() {
   async function deleteConversation(id: string) {
     await fetch(`/api/conversations/${id}`, { method: "DELETE" });
     if (conversationId === id) newChat();
+    refreshConversations();
+  }
+
+  async function renameConversation(id: string) {
+    await fetch(`/api/conversations/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: editTitle }),
+    });
+    setEditingId(undefined);
     refreshConversations();
   }
 
@@ -91,7 +103,16 @@ export default function Page() {
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {conversations.map((c) => (
             <li key={c.id}>
-              <button onClick={() => loadConversation(c.id)}>{c.title}</button>
+              {editingId === c.id ? (
+                <form onSubmit={(e) => { e.preventDefault(); renameConversation(c.id); }}>
+                  <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                </form>
+              ) : (
+                <button onClick={() => loadConversation(c.id)}>{c.title}</button>
+              )}
+              <button aria-label={`이름 변경 ${c.title}`} onClick={() => { setEditingId(c.id); setEditTitle(c.title); }}>
+                ✎
+              </button>
               <button aria-label={`삭제 ${c.title}`} onClick={() => deleteConversation(c.id)}>
                 ×
               </button>
