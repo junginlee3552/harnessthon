@@ -36,12 +36,17 @@ export async function POST(req: Request) {
     select: { role: true, content: true },
   });
 
+  const messages = [
+    { role: "system", content: "You are a helpful assistant." },
+    ...history,
+  ];
+
   const enc = new TextEncoder();
   let reply = "";
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        for await (const tok of streamReply(history)) {
+        for await (const tok of streamReply(messages)) {
           reply += tok;
           controller.enqueue(enc.encode(`data: ${tok}\n\n`));
         }

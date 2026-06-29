@@ -26,5 +26,5 @@ it("sends prior conversation history to the model", async () => {
   await (await POST(req)).text();
 
   const last = captured[captured.length - 1];
-  expect(last.map((m) => m.content)).toEqual(["first", "reply", "second"]);
+  expect(last.filter((m) => m.role !== "system").map((m) => m.content)).toEqual(["first", "reply", "second"]);
 });
