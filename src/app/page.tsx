@@ -10,6 +10,7 @@ export default function Page() {
   const [input, setInput] = useState("");
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [streamError, setStreamError] = useState(false);
 
   useEffect(() => {
     fetch("/api/conversations")
@@ -41,6 +42,7 @@ export default function Page() {
     const content = input.trim();
     if (!content) return;
     setInput("");
+    setStreamError(false);
     setMessages((m) => [...m, { role: "user", content }, { role: "assistant", content: "" }]);
 
     const res = await fetch("/api/chat", {
@@ -54,6 +56,10 @@ export default function Page() {
       const { value, done } = await reader.read();
       if (done) break;
       for (const line of dec.decode(value).split("\n\n")) {
+        if (line.startsWith("event: error")) {
+          setStreamError(true);
+          continue;
+        }
         const tok = line.replace(/^data: /, "");
         if (!tok) continue;
         setMessages((m) => {
@@ -88,6 +94,7 @@ export default function Page() {
           <b>{m.role}:</b> {m.content}
         </p>
       ))}
+        {streamError && <p>응답이 중단되었습니다</p>}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}

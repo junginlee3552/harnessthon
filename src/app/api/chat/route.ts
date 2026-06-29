@@ -39,6 +39,8 @@ export async function POST(req: Request) {
           reply += tok;
           controller.enqueue(enc.encode(`data: ${tok}\n\n`));
         }
+      } catch {
+        controller.enqueue(enc.encode(`event: error\n\n`));
       } finally {
         await db.message.create({
           data: {
