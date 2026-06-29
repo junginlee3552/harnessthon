@@ -152,6 +152,11 @@ export default function Page() {
       {messages.map((m, i) => (
         <p key={i}>
           <b>{m.role}:</b> {m.role === "assistant" ? renderMarkdown(m.content) : m.content}
+          {m.role === "assistant" && m.content && (
+            <button aria-label="복사" onClick={() => navigator.clipboard.writeText(m.content)}>
+              복사
+            </button>
+          )}
         </p>
       ))}
         {sending && <p>응답 받는 중...</p>}
