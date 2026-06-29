@@ -1,5 +1,6 @@
 import { resolveClientId } from "../../../server/identity";
 import { streamReply } from "../../../server/azureOpenAI";
+import { searchWeb, groundingPrompt } from "../../../server/webSearch";
 import { db } from "../../../server/db";
 
 function readCookie(header: string | null, name: string): string | undefined {
@@ -11,11 +12,20 @@ function readCookie(header: string | null, name: string): string | undefined {
   return undefined;
 }
 
+// Trivial follow-ups (e.g. "응", "그래", "ok") carry no search-worthy
+// keywords; searching them only injects junk grounding, so skip the web hit.
+function isTrivialFollowUp(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (t.length <= 6) return true;
+  return /^(응|네|예|어|그래|좋아|ok|okay|yes|yep|sure|그렇게 해줘|그래 해줘|응 그렇게 해줘)[.!~\s]*$/.test(t);
+}
+
 export async function POST(req: Request) {
-  const { conversationId, content, model } = (await req.json()) as {
+  const { conversationId, content, model, search } = (await req.json()) as {
     conversationId?: string;
     content: string;
     model?: string;
+    search?: boolean;
   };
   const { clientId, isNew } = resolveClientId(
     readCookie(req.headers.get("cookie"), "clientId")
@@ -37,8 +47,21 @@ export async function POST(req: Request) {
     select: { role: true, content: true },
   });
 
+  let systemContent = "You are a helpful assistant.";
+  if (search && !isTrivialFollowUp(content)) {
+    try {
+      const results = await searchWeb(content, fetch);
+      const grounding = groundingPrompt(content, results);
+      systemContent = grounding
+        ? `${systemContent}\n\n${grounding}`
+        : `${systemContent}\n\nA live web search for "${content}" returned no results. Do the best you can with what you know and tell the user the search came up empty; do not claim you cannot access the internet.`;
+    } catch {
+      systemContent = `${systemContent}\n\nA live web search was attempted but failed. Answer as best you can and note the search was unavailable; do not claim you fundamentally cannot access the internet.`;
+    }
+  }
+
   const messages = [
-    { role: "system", content: "You are a helpful assistant." },
+    { role: "system", content: systemContent },
     ...history,
   ];
 

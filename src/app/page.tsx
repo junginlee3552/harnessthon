@@ -14,6 +14,7 @@ export default function Page() {
   const [streamError, setStreamError] = useState(false);
   const [sending, setSending] = useState(false);
   const [model, setModel] = useState("gpt-5.4");
+  const [search, setSearch] = useState(false);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [editTitle, setEditTitle] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -80,23 +81,28 @@ export default function Page() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ conversationId, content, model }),
+      body: JSON.stringify({ conversationId, content, model, search }),
       signal: ctrl.signal,
     });
     const newId = res.headers?.get?.("x-conversation-id");
     if (newId && !conversationId) setConversationId(newId);
     const reader = res.body!.getReader();
     const dec = new TextDecoder();
+    let buf = "";
     try {
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
-        for (const line of dec.decode(value).split("\n\n")) {
-          if (line.startsWith("event: error")) {
+        buf += dec.decode(value, { stream: true });
+        const frames = buf.split("\n\n");
+        buf = frames.pop() ?? "";
+        for (const frame of frames) {
+          if (frame.startsWith("event: error")) {
             setStreamError(true);
             continue;
           }
-          const tok = line.replace(/^data: /, "");
+          if (!frame.startsWith("data: ")) continue;
+          const tok = frame.slice(6);
           if (!tok) continue;
           setMessages((m) => {
             const copy = [...m];
@@ -191,6 +197,10 @@ export default function Page() {
                 <option value="gpt-4o-mini">gpt-4o-mini</option>
                 <option value="gpt-4o">gpt-4o</option>
               </select>
+              <label className="search-toggle">
+                <input type="checkbox" checked={search} onChange={(e) => setSearch(e.target.checked)} />
+                웹 검색
+              </label>
               <button className="send" onClick={() => send()} disabled={sending || !input.trim()}>전송</button>
               {sending && <button onClick={stop}>중지</button>}
             </div>

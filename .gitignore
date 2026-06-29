@@ -15,6 +15,8 @@ applogs/
 applogs2/
 applogs.zip
 applogs2.zip
+applogs*/
+applogs*.zip
 
 # In-repo git worktrees created for parallel development
 .worktrees/

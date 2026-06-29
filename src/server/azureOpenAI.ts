@@ -22,14 +22,22 @@ export async function* streamReply(
   });
   const reader = res.body!.getReader();
   const dec = new TextDecoder();
+  let buf = "";
   for (;;) {
     const { value, done } = await reader.read();
     if (done) break;
-    for (const line of dec.decode(value).split("\n\n")) {
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split("\n\n");
+    buf = lines.pop() ?? "";
+    for (const line of lines) {
       const m = line.replace(/^data: /, "").trim();
       if (!m || m === "[DONE]") continue;
-      const tok = JSON.parse(m).choices?.[0]?.delta?.content;
-      if (tok) yield tok;
+      try {
+        const tok = JSON.parse(m).choices?.[0]?.delta?.content;
+        if (tok) yield tok;
+      } catch {
+        // skip incomplete/non-JSON frames
+      }
     }
   }
 }
