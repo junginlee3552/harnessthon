@@ -11,6 +11,10 @@ Thumbs.db
 *.log
 tmp/
 temp/
+applogs/
+applogs2/
+applogs.zip
+applogs2.zip
 
 # In-repo git worktrees created for parallel development
 .worktrees/

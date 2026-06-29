@@ -69,6 +69,7 @@ export async function POST(req: Request) {
   const headers: Record<string, string> = {
     "content-type": "text/event-stream",
     "cache-control": "no-cache",
+    "x-conversation-id": conversation!.id,
   };
   if (isNew) headers["set-cookie"] = `clientId=${clientId}; Path=/; HttpOnly`;
   return new Response(stream, { headers });

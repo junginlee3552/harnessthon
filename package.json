@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "prisma generate && next build",
+    "start": "mkdir -p /home/data && npx prisma db push --skip-generate && npx next start",
     "test": "vitest run"
   },
   "dependencies": {
     "@azure/identity": "^4.13.1",
     "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0",
     "next": "^15.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -21,7 +22,6 @@
     "@types/node": "^20.16.0",
     "@types/react": "^18.3.0",
     "jsdom": "^29.1.1",
-    "prisma": "^5.22.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   }

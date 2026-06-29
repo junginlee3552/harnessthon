@@ -1,0 +1,6 @@
+name: harnessthon
+services:
+  web:
+    project: .
+    language: js
+    host: appservice

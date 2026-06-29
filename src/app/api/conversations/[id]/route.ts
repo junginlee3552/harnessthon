@@ -10,12 +10,13 @@ function readCookie(header: string | null, name: string): string | undefined {
   return undefined;
 }
 
-export async function GET(req: Request, ctx: { params: { id: string } }) {
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
   const { clientId } = resolveClientId(
     readCookie(req.headers.get("cookie"), "clientId")
   );
   const conversation = await db.conversation.findUnique({
-    where: { id: ctx.params.id },
+    where: { id },
     include: { messages: { orderBy: { createdAt: "asc" } } },
   });
   if (!conversation || conversation.clientId !== clientId) {
@@ -26,32 +27,34 @@ export async function GET(req: Request, ctx: { params: { id: string } }) {
   );
 }
 
-export async function DELETE(req: Request, ctx: { params: { id: string } }) {
+export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
   const { clientId } = resolveClientId(
     readCookie(req.headers.get("cookie"), "clientId")
   );
   const conversation = await db.conversation.findUnique({
-    where: { id: ctx.params.id },
+    where: { id },
   });
   if (!conversation || conversation.clientId !== clientId) {
     return new Response("not found", { status: 404 });
   }
-  await db.message.deleteMany({ where: { conversationId: ctx.params.id } });
-  await db.conversation.delete({ where: { id: ctx.params.id } });
+  await db.message.deleteMany({ where: { conversationId: id } });
+  await db.conversation.delete({ where: { id } });
   return new Response("ok", { status: 200 });
 }
 
-export async function PATCH(req: Request, ctx: { params: { id: string } }) {
+export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
   const { clientId } = resolveClientId(
     readCookie(req.headers.get("cookie"), "clientId")
   );
   const conversation = await db.conversation.findUnique({
-    where: { id: ctx.params.id },
+    where: { id },
   });
   if (!conversation || conversation.clientId !== clientId) {
     return new Response("not found", { status: 404 });
   }
   const { title } = (await req.json()) as { title: string };
-  await db.conversation.update({ where: { id: ctx.params.id }, data: { title } });
+  await db.conversation.update({ where: { id }, data: { title } });
   return new Response("ok", { status: 200 });
 }

@@ -83,6 +83,8 @@ export default function Page() {
       body: JSON.stringify({ conversationId, content, model }),
       signal: ctrl.signal,
     });
+    const newId = res.headers?.get?.("x-conversation-id");
+    if (newId && !conversationId) setConversationId(newId);
     const reader = res.body!.getReader();
     const dec = new TextDecoder();
     try {
