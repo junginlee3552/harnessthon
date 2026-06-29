@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { renderMarkdown } from "./markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type ConversationSummary = { id: string; title: string; createdAt: string };
@@ -129,7 +130,7 @@ export default function Page() {
         {messages.length === 0 && <p>무엇이든 물어보세요</p>}
       {messages.map((m, i) => (
         <p key={i}>
-          <b>{m.role}:</b> {m.content}
+          <b>{m.role}:</b> {m.role === "assistant" ? renderMarkdown(m.content) : m.content}
         </p>
       ))}
         {sending && <p>응답 받는 중...</p>}
