@@ -11,6 +11,7 @@ export default function Page() {
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [streamError, setStreamError] = useState(false);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     fetch("/api/conversations")
@@ -43,6 +44,7 @@ export default function Page() {
     if (!content) return;
     setInput("");
     setStreamError(false);
+    setSending(true);
     setMessages((m) => [...m, { role: "user", content }, { role: "assistant", content: "" }]);
 
     const res = await fetch("/api/chat", {
@@ -72,6 +74,7 @@ export default function Page() {
         });
       }
     }
+    setSending(false);
     refreshConversations();
   }
 
@@ -94,12 +97,14 @@ export default function Page() {
           <b>{m.role}:</b> {m.content}
         </p>
       ))}
+        {sending && <p>응답 받는 중...</p>}
         {streamError && <p>응답이 중단되었습니다</p>}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
         />
+        <button onClick={send}>전송</button>
       </main>
     </div>
   );
