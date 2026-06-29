@@ -32,6 +32,11 @@ export default function Page() {
     setMessages(msgs);
   }
 
+  function newChat() {
+    setConversationId(undefined);
+    setMessages([]);
+  }
+
   async function send() {
     const content = input.trim();
     if (!content) return;
@@ -67,6 +72,7 @@ export default function Page() {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <aside style={{ width: 240, borderRight: "1px solid #ddd", padding: 12 }}>
+        <button onClick={newChat}>새 대화</button>
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {conversations.map((c) => (
             <li key={c.id}>
