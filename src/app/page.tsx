@@ -18,6 +18,13 @@ export default function Page() {
       .catch(() => {});
   }, []);
 
+  function refreshConversations() {
+    fetch("/api/conversations")
+      .then((r) => r.json())
+      .then(setConversations)
+      .catch(() => {});
+  }
+
   async function loadConversation(id: string) {
     const res = await fetch(`/api/conversations/${id}`);
     const msgs: Msg[] = await res.json();
@@ -54,6 +61,7 @@ export default function Page() {
         });
       }
     }
+    refreshConversations();
   }
 
   return (
