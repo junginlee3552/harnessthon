@@ -1,6 +1,11 @@
 import { resolveClientId } from "../../../server/identity";
 import { streamReply } from "../../../server/azureOpenAI";
-import { searchWeb, groundingPrompt } from "../../../server/webSearch";
+import {
+  searchWeb,
+  groundingPrompt,
+  searchAzureDocs,
+  azureGroundingPrompt,
+} from "../../../server/webSearch";
 import { db } from "../../../server/db";
 
 function readCookie(header: string | null, name: string): string | undefined {
@@ -21,11 +26,12 @@ function isTrivialFollowUp(text: string): boolean {
 }
 
 export async function POST(req: Request) {
-  const { conversationId, content, model, search } = (await req.json()) as {
+  const { conversationId, content, model, search, azureSearch } = (await req.json()) as {
     conversationId?: string;
     content: string;
     model?: string;
     search?: boolean;
+    azureSearch?: boolean;
   };
   const { clientId, isNew } = resolveClientId(
     readCookie(req.headers.get("cookie"), "clientId")
@@ -47,8 +53,19 @@ export async function POST(req: Request) {
     select: { role: true, content: true },
   });
 
-  let systemContent = "You are a helpful assistant.";
-  if (search && !isTrivialFollowUp(content)) {
+  let systemContent =
+    "You are a helpful assistant. Format answers in Markdown: use ## headings for sections, '- ' for bullet lists, **bold** for emphasis, and separate paragraphs with a blank line. Always put each heading and each bullet on its own line.";
+  if (azureSearch && !isTrivialFollowUp(content)) {
+    try {
+      const results = await searchAzureDocs(content, fetch);
+      const grounding = azureGroundingPrompt(content, results);
+      systemContent = grounding
+        ? `${systemContent}\n\n${grounding}`
+        : `${systemContent}\n\nA search of the official Azure docs for "${content}" returned no results. Answer from your Azure knowledge and tell the user the docs search came up empty; do not claim you cannot access the internet.`;
+    } catch {
+      systemContent = `${systemContent}\n\nAn Azure docs search was attempted but failed. Answer as best you can and note the search was unavailable; do not claim you fundamentally cannot access the internet.`;
+    }
+  } else if (search && !isTrivialFollowUp(content)) {
     try {
       const results = await searchWeb(content, fetch);
       const grounding = groundingPrompt(content, results);

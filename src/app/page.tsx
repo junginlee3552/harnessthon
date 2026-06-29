@@ -14,7 +14,8 @@ export default function Page() {
   const [streamError, setStreamError] = useState(false);
   const [sending, setSending] = useState(false);
   const [model, setModel] = useState("gpt-5.4");
-  const [search, setSearch] = useState(false);
+  const [search, setSearch] = useState(true);
+  const [azureSearch, setAzureSearch] = useState(false);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [editTitle, setEditTitle] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -81,7 +82,7 @@ export default function Page() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ conversationId, content, model, search }),
+      body: JSON.stringify({ conversationId, content, model, search, azureSearch }),
       signal: ctrl.signal,
     });
     const newId = res.headers?.get?.("x-conversation-id");
@@ -200,6 +201,10 @@ export default function Page() {
               <label className="search-toggle">
                 <input type="checkbox" checked={search} onChange={(e) => setSearch(e.target.checked)} />
                 웹 검색
+              </label>
+              <label className="search-toggle">
+                <input type="checkbox" checked={azureSearch} onChange={(e) => setAzureSearch(e.target.checked)} />
+                Azure 기술 검색
               </label>
               <button className="send" onClick={() => send()} disabled={sending || !input.trim()}>전송</button>
               {sending && <button onClick={stop}>중지</button>}
